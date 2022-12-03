@@ -1,6 +1,8 @@
 import { useRef } from "react";
 
 export default function Item({
+  wide,
+  tall,
   id,
   onFocus,
   focusedElement,
@@ -45,8 +47,8 @@ export default function Item({
         backgroundColor: isFocused ? "lightblue" : "blue",
         transition: "background-color 0.2s ease",
         border: "1px solid black",
-        height: "150px",
-        width: "150px",
+        height: tall ? "170px" : "80px",
+        width: wide ? "100px" : "50px",
         margin: "8px",
       }}
     ></div>
