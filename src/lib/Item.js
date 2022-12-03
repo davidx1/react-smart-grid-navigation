@@ -15,6 +15,7 @@ export default function Item({
   const isFocused = focusedElement === id;
 
   const handleArrowInput = (e) => {
+    e.preventDefault();
     const bound = ref.current.getBoundingClientRect();
     switch (e.code) {
       case "ArrowUp":
