@@ -1,13 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Children } from "react";
 
-export const useSmartElements = ({ registerSelf, unregisterSelf, selfId }) => {
-  useEffect(() => {
-    registerSelf(selfId);
-    return () => unregisterSelf(selfId);
-  }, []);
+export const useSmartElements = ({ children }) => {
   const [elements, setElements] = useState([]);
-  const registerEl = (newElement) => setElements((els) => [...els, newElement]);
-  const unregisterEl = (elToRemove) =>
-    setElements((els) => els.filter((e) => e !== elToRemove));
-  return { elements, registerEl, unregisterEl };
+  useEffect(() => {
+    setElements(Children.map(children, (child) => child.props.id));
+  }, [children]);
+  return { elements };
 };

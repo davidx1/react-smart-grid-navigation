@@ -1,39 +1,31 @@
-import { useContext } from "react";
-import { SmartContext } from "./smartContext";
-import { useSmartElements } from "./useSmartElements";
+import { useRef } from "react";
 
-export default function Item({ id, onFocus }) {
-  const {
-    focusedElement,
-    registerEl,
-    unregisterEl,
-    onUp,
-    onDown,
-    onLeft,
-    onRight
-  } = useContext(SmartContext);
-
-  useSmartElements({
-    registerSelf: registerEl,
-    unregisterSelf: unregisterEl,
-    selfId: id
-  });
-
+export default function Item({
+  id,
+  onFocus,
+  focusedElement,
+  onUp,
+  onDown,
+  onLeft,
+  onRight,
+}) {
+  const ref = useRef();
   const isFocused = focusedElement === id;
 
   const handleArrowInput = (e) => {
+    const bound = ref.current.getBoundingClientRect();
     switch (e.code) {
       case "ArrowUp":
-        onUp();
+        onUp(bound);
         break;
       case "ArrowDown":
-        onDown();
+        onDown(bound);
         break;
       case "ArrowLeft":
-        onLeft();
+        onLeft(bound);
         break;
       case "ArrowRight":
-        onRight();
+        onRight(bound);
         break;
       case "Escape":
       default:
@@ -43,17 +35,19 @@ export default function Item({ id, onFocus }) {
 
   return (
     <div
+      ref={ref}
       id={id}
       custom-focusable="true"
       onKeyDown={handleArrowInput}
       tabIndex={0}
       onFocus={onFocus}
       style={{
-        backgroundColor: isFocused ? "red" : "blue",
+        backgroundColor: isFocused ? "lightblue" : "blue",
+        transition: "background-color 0.2s ease",
         border: "1px solid black",
         height: "150px",
         width: "150px",
-        margin: "8px"
+        margin: "8px",
       }}
     ></div>
   );

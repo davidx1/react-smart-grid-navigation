@@ -1,61 +1,36 @@
+import { useState } from "react";
 import Container from "./lib/Container";
 import Item from "./lib/Item";
-import { SmartContext } from "./lib/smartContext";
+import Page1 from "./Page1";
+import Page2 from "./Page2";
+
+const pages = [
+  <Page1 id="Content1" stateMode="alwaysReset" />,
+  <Page2 id="Content2" stateMode="alwaysReset" />,
+];
 
 export default function App() {
+  const [pageToShow, setPageToShow] = useState(0);
+
   return (
-    <SmartContext.Provider
-      value={{
-        variant: "row",
-        focusedElement: "root",
-        registerEl: () => {},
-        unregisterEl: () => {},
-        onUp: () => {},
-        onDown: () => {},
-        onLeft: () => {},
-        onRight: () => {}
-      }}
+    <Container
+      id="root"
+      variant="row"
+      focusedElement="root"
+      onUp={() => {}}
+      onDown={() => {}}
+      onLeft={() => {}}
+      onRight={() => {}}
     >
-      <Container id="root">
-        <Container id="LeftNav">
-          <Item id="A1"></Item>
-          <Item id="A2"></Item>
-          <Item id="A3"></Item>
-          <Item id="A4"></Item>
-          <Item id="A5"></Item>
-          <Item id="A6"></Item>
-        </Container>
-        <Container id="Content">
-          <Container id="Content Row 1">
-            <Item id="B1"></Item>
-            <Item id="B2"></Item>
-            <Item id="B3"></Item>
-            <Item id="B4"></Item>
-            <Item id="B5"></Item>
-            <Item id="B6"></Item>
-          </Container>
-          <Container id="Content Row 2">
-            <Item id="C1"></Item>
-            <Item id="C2"></Item>
-            <Item id="C3"></Item>
-            <Item id="C4"></Item>
-          </Container>
-          <Container id="Content Row 3">
-            <Container id="R3C1">
-              <Item id="D1"></Item>
-              <Item id="D2"></Item>
-              <Item id="D3"></Item>
-              <Item id="D4"></Item>
-            </Container>
-            <Container id="R3C2">
-              <Item id="E1"></Item>
-              <Item id="E2"></Item>
-              <Item id="E3"></Item>
-              <Item id="E4"></Item>
-            </Container>
-          </Container>
-        </Container>
+      <Container id="LeftNav" stateMode="preserve">
+        <Item id="A1" onFocus={() => setPageToShow(0)}></Item>
+        <Item id="A2" onFocus={() => setPageToShow(1)}></Item>
+        <Item id="A3" onFocus={() => setPageToShow(0)}></Item>
+        <Item id="A4" onFocus={() => setPageToShow(1)}></Item>
+        <Item id="A5" onFocus={() => setPageToShow(0)}></Item>
+        <Item id="A6" onFocus={() => setPageToShow(1)}></Item>
       </Container>
-    </SmartContext.Provider>
+      {pages[pageToShow]}
+    </Container>
   );
 }

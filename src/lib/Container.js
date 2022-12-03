@@ -1,79 +1,98 @@
-import React, { useContext, useEffect, useState } from "react";
-import { SmartContext } from "./smartContext";
+import React, {
+  useEffect,
+  useState,
+  Children,
+  cloneElement,
+  useRef,
+} from "react";
 import { useSmartElements } from "./useSmartElements";
 
-export default function Container({ children, id, alwaysReset }) {
-  const {
-    variant,
-    focusedElement,
-    registerEl,
-    unregisterEl,
-    onUp,
-    onDown,
-    onLeft,
-    onRight
-  } = useContext(SmartContext);
-
-  const {
-    elements: childElements,
-    registerEl: registerChild,
-    unregisterEl: unregisterChild
-  } = useSmartElements({
-    registerSelf: registerEl,
-    unregisterSelf: unregisterEl,
-    selfId: id
+export default function Container({
+  prevBound,
+  children,
+  id,
+  variant,
+  focusedElement,
+  onUp,
+  onDown,
+  onLeft,
+  onRight,
+  stateMode = "geometric",
+}) {
+  const { elements: childElements } = useSmartElements({
+    children,
   });
 
   const isFocused = focusedElement === id;
-
   const [focusedChild, setFocusedChild] = useState(null);
+  const [localPrevBound, setLocalPrevBound] = useState(null);
 
+  const prevIsFocused = useRef();
   useEffect(() => {
-    if (!focusedChild) {
-      setFocusedChild(childElements[0]);
-      const el = document.getElementById(childElements[0]);
-      if (isFocused && el?.hasAttributes("custom-focusable")) {
-        el.focus();
+    if (prevIsFocused !== isFocused && isFocused) {
+      setLocalPrevBound(prevBound);
+      let childToFocus = focusedChild;
+      if (!childToFocus) {
+        childToFocus = childElements[0];
       }
-    } else {
-      const el = document.getElementById(focusedChild);
-      if (isFocused && el?.hasAttributes("custom-focusable")) {
+      if (stateMode === "alwaysReset") {
+        childToFocus = childElements[0];
+      }
+      if (stateMode === "geometric" && prevBound) {
+        childToFocus = childElements.reduce(
+          (acc, cur) => {
+            const { x, y } = prevBound;
+            const { x: thisX, y: thisY } = document
+              .getElementById(cur)
+              .getBoundingClientRect();
+            const newDiff = Math.abs(x - thisX) + Math.abs(y - thisY);
+            return newDiff < acc[1] ? [cur, newDiff] : acc;
+          },
+          [null, Infinity]
+        )[0];
+      }
+      setFocusedChild(childToFocus);
+      const el = document.getElementById(childToFocus);
+      if (el?.hasAttributes("custom-focusable")) {
         el.focus();
       }
     }
-  }, [childElements, focusedChild, isFocused]);
+    prevIsFocused.current = isFocused;
+  }, [isFocused, stateMode]);
 
-  const onNextItem = () => {
+  const onNextItem = (bound) => {
+    setLocalPrevBound((pre) => (stateMode === "preserve" ? null : bound));
     const curIndex = childElements.findIndex((el) => el === focusedChild);
     const nextIndex = curIndex + 1;
     if (nextIndex < childElements.length) {
       const nextItemId = childElements[nextIndex];
-      setFocusedChild(nextItemId);
+      setFocusedChild((pre) => nextItemId);
       const nextItem = document.getElementById(nextItemId);
       if (nextItem?.hasAttributes("custom-focusable")) {
         nextItem.focus();
       }
     } else if (variant === "row") {
-      onRight();
+      onRight(stateMode === "preserve" ? null : bound);
     } else {
-      onDown();
+      onDown(stateMode === "preserve" ? null : bound);
     }
   };
 
-  const onPrevItem = () => {
+  const onPrevItem = (bound) => {
+    setLocalPrevBound((pre) => (stateMode === "preserve" ? null : bound));
     const curIndex = childElements.findIndex((el) => el === focusedChild);
     const prevIndex = curIndex - 1;
     if (prevIndex >= 0) {
       const prevItemId = childElements[prevIndex];
-      setFocusedChild(prevItemId);
+      setFocusedChild((pre) => prevItemId);
       const prevItem = document.getElementById(prevItemId);
       if (prevItem?.hasAttributes("custom-focusable")) {
         prevItem.focus();
       }
     } else if (variant === "row") {
-      onLeft();
+      onLeft(stateMode === "preserve" ? null : bound);
     } else {
-      onUp();
+      onUp(stateMode === "preserve" ? null : bound);
     }
   };
 
@@ -83,31 +102,29 @@ export default function Container({ children, id, alwaysReset }) {
       : [onPrevItem, onNextItem, onLeft, onRight];
 
   return (
-    <SmartContext.Provider
-      value={{
-        variant: variant === "row" ? "column" : "row",
-        focusedElement: isFocused ? focusedChild : null,
-        registerEl: registerChild,
-        unregisterEl: unregisterChild,
-        onUp: onChildUp,
-        onDown: onChildDown,
-        onLeft: onChildLeft,
-        onRight: onChildRight
+    <div
+      id={id}
+      style={{
+        padding: "8px",
+        margin: "8px",
+        display: "flex",
+        border: "1px solid black",
+        flexDirection: variant,
+        backgroundColor: isFocused ? "#11111133" : "transparent",
       }}
     >
-      <div
-        style={{
-          padding: "8px",
-          margin: "8px",
-          display: "flex",
-          border: "1px solid black",
-          flexDirection: variant,
-          backgroundColor: isFocused ? "#11111133" : "transparent"
-        }}
-        tabIndex={0}
-      >
-        {children}
-      </div>
-    </SmartContext.Provider>
+      {Children.map(children, (child) =>
+        cloneElement(child, {
+          prevBound: localPrevBound,
+          variant: variant === "row" ? "column" : "row",
+          focusedElement:
+            isFocused || stateMode === "preserve" ? focusedChild : null,
+          onUp: onChildUp,
+          onDown: onChildDown,
+          onLeft: onChildLeft,
+          onRight: onChildRight,
+        })
+      )}
+    </div>
   );
 }
