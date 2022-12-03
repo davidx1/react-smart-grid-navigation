@@ -1,10 +1,9 @@
 import Container from "./lib/Container";
 import Item from "./lib/Item";
 
-export default function Page1() {
+export default function Page1(props) {
   return (
-    <>
-      <h1>Page 1</h1>
+    <Container {...props}>
       <Container id="Content Row 1">
         <Item id="B1"></Item>
         <Item id="B2"></Item>
@@ -19,6 +18,6 @@ export default function Page1() {
         <Item id="C3"></Item>
         <Item id="C4"></Item>
       </Container>
-    </>
+    </Container>
   );
 }
