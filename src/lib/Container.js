@@ -41,11 +41,17 @@ export default function Container({
       if (stateMode === "geometric" && prevBound) {
         childToFocus = childElements.reduce(
           (acc, cur) => {
-            const { x, y } = prevBound;
-            const { x: thisX, y: thisY } = document
-              .getElementById(cur)
-              .getBoundingClientRect();
-            const newDiff = Math.abs(x - thisX) + Math.abs(y - thisY);
+            const { x, y, width, height } = prevBound;
+            const {
+              x: thisX,
+              y: thisY,
+              width: thisW,
+              height: thisH,
+            } = document.getElementById(cur).getBoundingClientRect();
+            const newDiff = Math.sqrt(
+              Math.pow(Math.abs(x + width / 2 - (thisX + thisW / 2)), 2) +
+                Math.pow(Math.abs(y + height / 2 - (thisY + thisH / 2)), 2)
+            );
             return newDiff < acc[1] ? [cur, newDiff] : acc;
           },
           [null, Infinity]
